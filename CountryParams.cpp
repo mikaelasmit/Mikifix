@@ -25,21 +25,21 @@ extern int total_population;
 extern int ART_start_yr;
 extern int factor;
 extern int ageAdult;
+extern int age_atrisk_hpv;
+extern int age_tostart_CCscreening;
 extern double Sex_ratio;
 
 extern double HPV_Prevalence;
-extern double CIN1_Prevalence;
-extern double CIN2_3_Prevalence;
-extern double CIS_Prevalence;
-extern double ICC_Prevalence;
 extern int HPV_Status_HPV;
 extern int HPV_Status_CIN1;
 extern int HPV_Status_CIN2_3;
 extern int HPV_Status_CIS;
 extern int HPV_Status_ICC;
 extern int HPV_Status_Recovered;
+extern int HPV_Status_ReInfected;
 extern double hpv_date_after_death;
 extern double no_hpv_infection;
+extern double HPV_Screening_coverage;
 
 extern double ARTbuffer;
 extern double MortAdj;
@@ -67,12 +67,15 @@ void loadCountryParams(int x){
         total_population=init_pop;
         ART_start_yr=2004;
         ageAdult=15;
+        age_atrisk_hpv=17;
+        age_tostart_CCscreening=25;
         Sex_ratio=0.495639296;
         HPV_Prevalence=0.8;
-        CIN1_Prevalence=0.2;
-        CIN2_3_Prevalence=0.4;
-        CIS_Prevalence=0.65;
-        ICC_Prevalence=1.0;
+        HPV_Screening_coverage=0.03;
+        //CIN1_Rates[2]= {0.2,0.8};
+        //CIN2_3_Rates[2]={0.4,0.6};
+        //CIS_Rates[2]={0.65,0.35};
+        //ICC_Rates[2]={1.0,0.0};
         no_hpv_infection=-988;
         hpv_date_after_death = -977;
         HPV_Status_HPV=1;
@@ -81,6 +84,7 @@ void loadCountryParams(int x){
         HPV_Status_CIS=4;
         HPV_Status_ICC=5;
         HPV_Status_Recovered=6;
+        HPV_Status_ReInfected=7;
         ARTbuffer=1.01;
         MortAdj=1;
         // Mortality percentages from GBD 2016
@@ -106,6 +110,7 @@ void loadCountryParams(int x){
      total_population=init_pop;
      ART_start_yr=2004;
      ageAdult=15;
+     age_atrisk_hpv=17;
      Sex_ratio=0.4986;
      ARTbuffer=1;
      MortAdj=1;
@@ -135,6 +140,7 @@ else if (x == 3){                                          // MALAWI need to rep
     total_population=init_pop;
     ART_start_yr=2004;
     ageAdult=15;
+    age_atrisk_hpv=17;
     Sex_ratio=0.4986;
     ARTbuffer=1;
     MortAdj=1;
@@ -161,12 +167,13 @@ else if (x == 4){                                          // Uasin Gishu - KENY
     total_population=init_pop;
     ART_start_yr=2004;
     ageAdult=15;
+    age_atrisk_hpv=17;
     Sex_ratio=0.50237783022;
     HPV_Prevalence=0.388; //normally 0.388
-    CIN1_Prevalence=0.2;
-    CIN2_3_Prevalence=0.4;
-    CIS_Prevalence=0.65;
-    ICC_Prevalence=1.0;
+    //CIN1_Rates[2]={0.2,0.8};
+    //CIN2_3_Rates[2]={0.4,0.6};
+    //CIS_Rates[2]={0.65,0.35};
+    //ICC_Rates[2]={1.0,0.0};
     no_hpv_infection=-988;
     hpv_date_after_death = -977;
     HPV_Status_HPV=1;
@@ -200,18 +207,22 @@ else if (x == 4){                                          // Uasin Gishu - KENY
 
 void getParamsString(int x){
     if (x == 1){
-        ParamDirectory="/Users/pperezgu/Dropbox/My_Africamodel/New_Model_Africa/HIVModelZimbabwe/Kenya/";
+
+        ParamDirectory="/Users/Monkeyface/Dropbox/Ageing in Kenya and Zimbabwe - project/Model_wHPV/Model_Africa_HPV/HIVModelZimbabwe/Kenya/";
     }
 
     else if (x == 2){
-        ParamDirectory="/Users/pperezgu/Dropbox/My_Africamodel/New_Model_Africa/HIVModelZimbabwe/Zimbabwe/";
+
+        ParamDirectory="/Users/Monkeyface/Dropbox/Ageing in Kenya and Zimbabwe - project/Model_wHPV/Model_Africa_HPV/HIVModelZimbabwe/Zimbabwe/";
     }
     else if (x == 3){
-        ParamDirectory="/Users/pperezgu/Dropbox/My_Africamodel/New_Model_Africa/HIVModelZimbabwe/Malawi/";
+
+        ParamDirectory="/Users/Monkeyface/Dropbox/Ageing in Kenya and Zimbabwe - project/Model_wHPV/Model_Africa_HPV/HIVModelZimbabwe/Malawi/";
     }
     
     else if (x == 4){
-        ParamDirectory="/Users/pperezgu/Dropbox/My_Africamodel/New_Model_Africa/HIVModelZimbabwe/Kenya_UG/";
+
+        ParamDirectory="/Users/Monkeyface/Dropbox/Ageing in Kenya and Zimbabwe - project/Model_wHPV/Model_Africa_HPV/HIVModelZimbabwe/Kenya_UG/";
     }
     
     

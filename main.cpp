@@ -35,7 +35,8 @@ using namespace std;
 int country=1;
 
 // STEP 2 --- NAME THE DIRECTORY AND TAG FOR THE OUTPUT FILE
-string OutputFileDirectory="/Users/pperezgu/Dropbox/Latest.csv";
+string OutputFileDirectory="/Users/Monkeyface/Dropbox/Ageing in Kenya and Zimbabwe - project/Model_wHPV/MATLAB_Pablo copy/MATLAB copy/HPVcheck3.csv";
+
 
 /// STEP 3 --- AT WHAT FACTOR SHOULD WE RUN THE POPULATION?
 int factor=100; //county = 1, country = 100
@@ -66,10 +67,11 @@ int         init_pop;                                                           
 int         total_population;                                                                                   //////////
 double      Sex_ratio;
 double      HPV_Prevalence;
-double      CIN1_Prevalence;
-double      CIN2_3_Prevalence;
-double      CIS_Prevalence;
-double      ICC_Prevalence;
+double      HPV_Screening_coverage;
+extern double CIN1_Rates[2];
+extern double CIN2_3_Rates[2];
+extern double      CIS_Rates[2];
+extern double      ICC_Rates[2];
 double      no_hpv_infection;
 double      HPV_Status_HPV;
 double      HPV_Status_CIN1;
@@ -77,10 +79,13 @@ double      HPV_Status_CIN2_3;
 double      HPV_Status_CIS;
 double      HPV_Status_ICC;
 double      HPV_Status_Recovered;
+int         HPV_Status_ReInfected;
 double      hpv_date_after_death;
 
 
 int         ageAdult;                                                                                           //////////
+int         age_atrisk_hpv;
+int         age_tostart_CCscreening;
 double      ARTbuffer;                                                                                          //////////
 double      MortAdj;                                                                                            //////////
 int         ART_start_yr;                                                                                       //////////
@@ -179,6 +184,7 @@ int main(){
     loadHIVArray_Men();
     loadNCDArray();
     loadCancerArray();
+    loadHPVarray();
     
     
     
@@ -196,7 +202,7 @@ int main(){
     double GlobalTime=StartYear;											// Define Global Time and set it to 0 at the beginning of the model
     p_GT=&GlobalTime;														// Define the location the pointer to Global time is pointing to
     
-    priority_queue<event*, vector<event*>, timeComparison> iQ;				// Define th ePriority Q
+    priority_queue<event*, vector<event*>, timeComparison> iQ;				// Define the Priority Q
     p_PQ=&iQ;																// Define pointer to event Q
     p_PY=&PY;
     cout << p_PY << endl;
@@ -238,7 +244,14 @@ int main(){
     TellNewYear->p_fun = &EventTellNewYear;
     iQ.push(TellNewYear);
 
-    
+    /// --- Screen all women who start ART for Cervical Cancer each year --- ///
+    /*event * CC_First_screen = new event;
+    Events.push_back(CC_First_screen);
+    CC_First_screen->time = 2018;
+    CC_First_screen->p_fun = &EventMyFirst_VIA_Screening;
+    iQ.push(CC_First_screen);
+    //p_PQ->push(CC_First_screen);
+    */
     //// --- LETS RUN THE EVENTQ --- ////
     cout << endl << endl << "The characteristics of the event queue:" << endl;
     cout << "the first event will ocurr in " << iQ.top()->time << ".  " << endl;
@@ -258,51 +271,54 @@ int main(){
     
     
     for (int i=0; i<total_population; i++) {								// Note: If adding more variables to be output, need to adapt the %x
-        fprintf(ProjectZim,"%d, %d, %f, %f, %d, %d, %f, %d, %f, %d, %d, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f \n",
+        fprintf(ProjectZim,"%d, %d, %f, %f, %d, %d, %f, %d, %f, %d, %d, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d \n",
                 MyArrayOfPointersToPeople[i]->PersonID,
                 MyArrayOfPointersToPeople[i]->Sex,
                 MyArrayOfPointersToPeople[i]->DoB,
                 MyArrayOfPointersToPeople[i]->Age,
-                MyArrayOfPointersToPeople[i]->MotherID,
+                MyArrayOfPointersToPeople[i]->MotherID,                         // Number 5
                 MyArrayOfPointersToPeople[i]->DatesBirth.size(),
                 MyArrayOfPointersToPeople[i]->DateOfDeath,
                 MyArrayOfPointersToPeople[i]->AgeAtDeath,
                 MyArrayOfPointersToPeople[i]->HIV,
-                MyArrayOfPointersToPeople[i]->CD4_cat,
+                MyArrayOfPointersToPeople[i]->CD4_cat,                          // Number 10
                 MyArrayOfPointersToPeople[i]->ART,
                 MyArrayOfPointersToPeople[i]->HT,
                 MyArrayOfPointersToPeople[i]->Depression,
                 MyArrayOfPointersToPeople[i]->Asthma,
-                MyArrayOfPointersToPeople[i]->Stroke,
+                MyArrayOfPointersToPeople[i]->Stroke,                           // Number 15
                 MyArrayOfPointersToPeople[i]->Diabetes,
                 MyArrayOfPointersToPeople[i]->CD4_cat_ARTstart,
                 MyArrayOfPointersToPeople[i]->CD4_change.at(0),
                 MyArrayOfPointersToPeople[i]->CD4_change.at(1),
-                MyArrayOfPointersToPeople[i]->CD4_change.at(2),
+                MyArrayOfPointersToPeople[i]->CD4_change.at(2),                 // Number 20
                 MyArrayOfPointersToPeople[i]->CD4_change.at(3),
                 MyArrayOfPointersToPeople[i]->CD4_change.at(4),
                 MyArrayOfPointersToPeople[i]->CD4_change.at(5),
                 MyArrayOfPointersToPeople[i]->CD4_change.at(6),
-                MyArrayOfPointersToPeople[i]->CauseOfDeath,
+                MyArrayOfPointersToPeople[i]->CauseOfDeath,                     // Number 25
                 MyArrayOfPointersToPeople[i]->CKD,
                 MyArrayOfPointersToPeople[i]->Breast,
                 MyArrayOfPointersToPeople[i]->Cervical,
                 MyArrayOfPointersToPeople[i]->Colo,
-                MyArrayOfPointersToPeople[i]->Liver,
+                MyArrayOfPointersToPeople[i]->Liver,                            // Number 30
                 MyArrayOfPointersToPeople[i]->Oeso,
                 MyArrayOfPointersToPeople[i]->Prostate,
                 MyArrayOfPointersToPeople[i]->OtherCan,
                 MyArrayOfPointersToPeople[i]->Stroke_status,             // Check if used and, if not, remove
-                MyArrayOfPointersToPeople[i]->HPV_Status,
+                MyArrayOfPointersToPeople[i]->HPV_Status,                       // Numbe 35
                 MyArrayOfPointersToPeople[i]->HPV_DateofInfection,
-                MyArrayOfPointersToPeople[i]->CIN1_DateofInfection,
-                MyArrayOfPointersToPeople[i]->CIN2_3_DateofInfection,
-                MyArrayOfPointersToPeople[i]->CIS_DateofInfection,
-                MyArrayOfPointersToPeople[i]->ICC_DateofInfection,
+                MyArrayOfPointersToPeople[i]->CIN1_DateofProgression,
+                MyArrayOfPointersToPeople[i]->CIN2_3_DateofProgression,
+                MyArrayOfPointersToPeople[i]->CIS_DateofProgression,
+                MyArrayOfPointersToPeople[i]->ICC_DateofProgression,              // Number 40
                 MyArrayOfPointersToPeople[i]->HPV_DateofRecovery,
                 MyArrayOfPointersToPeople[i]->CIN1_DateofRecovery,
                 MyArrayOfPointersToPeople[i]->CIN2_3_DateofRecovery,
-                MyArrayOfPointersToPeople[i]->CIS_DateofRecovery
+                MyArrayOfPointersToPeople[i]->CIS_DateofRecovery,
+                MyArrayOfPointersToPeople[i]->MI,                               // Number 45
+                MyArrayOfPointersToPeople[i]->HC,
+                MyArrayOfPointersToPeople[i]->HPV_ReInfection_Count
                 );}
     fclose(ProjectZim);
     
@@ -336,10 +352,10 @@ int main(){
     double OtherCan_m   =(count_causeofdeath[12]/(double)count_2016deaths)*100;
     double HPV_Status_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
     double HPV_DateofInfection_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
-    double CIN1_DateofInfection_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
-    double CIN2_3_DateofInfection_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
-    double CIS_DateofInfection_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
-    double ICC_DateofInfection_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
+    double CIN1_DateofProgression_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
+    double CIN2_3_DateofProgression_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
+    double CIS_DateofProgression_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
+    double ICC_DateofProgression_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
     double HPV_DateofRecovery_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
     double CIN1_DateofRecovery_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
     double CIN2_3_DateofRecovery_m        =(count_causeofdeath[13]/(double)count_2016deaths)*100;
@@ -361,10 +377,10 @@ int main(){
     cout << "OtherCan "   << OtherCan_m << endl;
     cout << "HPV_Status_m "        << HPV_Status_m << endl;
     cout << "HPV_DateofInfection "        << HPV_DateofInfection_m << endl;
-    cout << "CIN1_DateofInfection "        << CIN1_DateofInfection_m << endl;
-    cout << "CIN2_3_DateofInfection "        << CIN2_3_DateofInfection_m << endl;
-    cout << "CIS_DateofInfection "        << CIS_DateofInfection_m << endl;
-    cout << "ICC_DateofInfection "        << ICC_DateofInfection_m << endl;
+    cout << "CIN1_DateofProgression "        << CIN1_DateofProgression_m << endl;
+    cout << "CIN2_3_DateofProgression "        << CIN2_3_DateofProgression_m << endl;
+    cout << "CIS_DateofProgression "        << CIS_DateofProgression_m << endl;
+    cout << "ICC_DateofProgression "        << ICC_DateofProgression_m << endl;
     cout << "HPV_DateofRecovery "        << HPV_DateofRecovery_m << endl;
     cout << "CIN1_DateofRecovery "        << CIN1_DateofRecovery_m << endl;
     cout << "CIN2_3_DateofRecovery "        << CIN2_3_DateofRecovery_m << endl;

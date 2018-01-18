@@ -40,16 +40,37 @@ public:
     int AgeAtDeath;
     
     double HIV; // -- Variables related to HIV --
-    int HPV_Status;
-    double HPV_DateofInfection;
-    double CIN1_DateofInfection;
-    double CIN2_3_DateofInfection;
-    double CIS_DateofInfection;
-    double ICC_DateofInfection;
-    double HPV_DateofRecovery;
-    double CIN1_DateofRecovery;
-    double CIN2_3_DateofRecovery;
-    double CIS_DateofRecovery;
+    
+    // --- First HPV infection ---
+    int     HPV_Status;
+    int     HPV_StatusAtRecovery;
+    double  HPV_DateofInfection;
+    double  CIN1_DateofProgression;
+    double  CIN2_3_DateofProgression;
+    double  CIS_DateofProgression;
+    double  ICC_DateofProgression;
+    double  HPV_DateofRecovery;
+    double  CIN1_DateofRecovery;
+    double  CIN2_3_DateofRecovery;
+    double  CIS_DateofRecovery;
+    
+    // --- HPV Re-Infection ---
+    int     HPV_ReInfection_Count;
+    double  HPV_DateofRe_Infection;
+    double  CIN1_DateofRe_Progression;
+    double  CIN2_3_DateofRe_Progression;
+    double  CIS_DateofRe_Progression;
+    double  HPV_DateofRe_Recovery;
+    double  CIN1_DateofRe_Recovery;
+    double  CIN2_3_DateofRe_Recovery;
+    double  CIS_DateofRe_Recovery;
+    
+    // --- Variables related to CC interventions ---
+    int     CC_Screening_Count;
+    int     DateOfFirsVIA;
+    int     CC_ScreenOutcome;
+    int     CC_CryoOutcome;
+    double  Re_ScreenOn;
 
     int CD4_cat_start;
     int CD4_cat_ARTstart;
@@ -59,12 +80,16 @@ public:
     
     double HT;                                      // -- Variables related to NCDs --
     int HT_status;
+    double HC;
+    int HC_status;
     double Depression;
     int Depression_status;
     double Asthma;
     int Asthma_status;
     double Stroke;
     int Stroke_status;
+    double MI;
+    int MI_status;
     double Diabetes;
     int Diabetes_status;
     double CKD;

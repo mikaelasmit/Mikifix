@@ -106,9 +106,9 @@ person::person()											// First 'person' class second constructor/variable a
     CIS_DateofProgression=-999;
     ICC_DateofProgression=-999;
     HPV_DateofRecovery=-999;
-    CIN1_DateofRecovery=-999;
-    CIN2_3_DateofRecovery=-999;
-    CIS_DateofRecovery=-999;
+    //CIN1_DateofRecovery=-999;
+    //CIN2_3_DateofRecovery=-999;
+    //CIS_DateofRecovery=-999;
     CC_Screening_Count=0;
     HPV_ReInfection_Count=0;
     DateOfFirsVIA=-999;
@@ -373,8 +373,9 @@ void person::GetMyDateOfHPVInfection(){
     
     double age_at_death=DateOfDeath-DoB;
     
-    if(HPV_DateofInfection==-999 && Sex==2 && age_at_death<age_atrisk_hpv)
-    {HPV_DateofInfection=-990;}   // They die before reaching age at risk for HPV infection
+    if(HPV_DateofInfection==-999 && Sex==2 && age_at_death<age_atrisk_hpv){
+        HPV_DateofInfection=-990;   // They die before reaching age at risk for HPV infection
+    }
     
     if(age_at_death>=age_atrisk_hpv && Sex==2){
         double TestHPVDate=-997;
@@ -388,14 +389,19 @@ void person::GetMyDateOfHPVInfection(){
             double YearFraction=(RandomMinMax(1,12))/ 12.1;             // Get a random month as a fraction of a year
             TestHPVDate = DoB+i+YearFraction;                           // Get the date of HPV infection
             HPV_DateofInfection=TestHPVDate;
+            
             //// --- Lets feed HPV infection into the eventQ --- ////
-            int p=PersonID-1;
-            event * HPV_DateofInfectionEvent = new event;
-            Events.push_back(HPV_DateofInfectionEvent);
-            HPV_DateofInfectionEvent->time = HPV_DateofInfection;
-            HPV_DateofInfectionEvent->p_fun = &EventMyHPVInfection;
-            HPV_DateofInfectionEvent->person_ID = MyArrayOfPointersToPeople[p];
-            p_PQ->push(HPV_DateofInfectionEvent);}}
+            if (HPV_DateofInfection>=*p_GT && HPV_DateofInfection<EndYear){
+                int p=PersonID-1;
+                event * HPV_DateofInfectionEvent = new event;
+                Events.push_back(HPV_DateofInfectionEvent);
+                HPV_DateofInfectionEvent->time = HPV_DateofInfection;
+                HPV_DateofInfectionEvent->p_fun = &EventMyHPVInfection;
+                HPV_DateofInfectionEvent->person_ID = MyArrayOfPointersToPeople[p];
+                p_PQ->push(HPV_DateofInfectionEvent);
+            }
+        }
+    }
 }
 
 //// --- FUNCTIONS RELATED TO HIV --- ////

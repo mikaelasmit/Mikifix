@@ -414,55 +414,51 @@ void EventMyHPVInfection(person *MyPointerToPerson){                    // Funct
 
     E(cout << "Somebody just got infected with HPV and will either progress to CIN1 or recover: " << endl;)
     
-    if(MyPointerToPerson->Alive == 1 && MyPointerToPerson->HPV_Status<1){ //|| MyPointerToPerson->HPV_Status==HPV_Status_ReInfected)
-        MyPointerToPerson->Age= (*p_GT - MyPointerToPerson->DoB);       // Update age to get correct parameter below
+    if(MyPointerToPerson->Alive == 1 && MyPointerToPerson->HPV_Status<HPV_Status_HPV){
+       
+        MyPointerToPerson->HPV_Status=HPV_Status_HPV;
+            
+        int j=0;                                                    // Find out how many years it will take to progress/recover
+        double TestDate=0;
+        random_device rd;
+        mt19937 gen{rd()};
+        uniform_int_distribution<> dis{1, 2};
+        j = dis(gen);
         
-        if (MyPointerToPerson->HPV_DateofInfection>0){  // && MyPointerToPerson->HPV_ReInfection_Count==0
-            MyPointerToPerson->HPV_Status=HPV_Status_HPV;
-            
-            int year = floor(*p_GT);
-            double months = floor(((1-(*p_GT-year+0.01))*12));
-            int j=0;                                                    // Find out how many years it will take to progress/recover
-            float TestCIN1Date=0;
-            random_device rd;
-            mt19937 gen{rd()};
-            uniform_int_distribution<> dis{1, 2};
-            j = dis(gen);
-            
-            double YearFraction=-999;                                   // Get the date when the progression/recovery will take place
-            YearFraction=(RandomMinMax_2(0,months))/12.1;
-            TestCIN1Date=(MyPointerToPerson->HPV_DateofInfection+j)+YearFraction;
-            double    h = ((double)rand() / (RAND_MAX));                // Get a random number for the probability of progression vs recovery
-            //cout << *p_GT << endl;
-            //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "Date: " << TestCIN1Date << endl << "H: " << h <<  endl;
-            // --- In case they recover from HPV
+        double YearFraction=-999;                                   // Get the date when the progression/recovery will take place
+        YearFraction=(RandomMinMax_2(0,12))/12.1;
+        TestDate=MyPointerToPerson->HPV_DateofInfection+j+YearFraction;
+        
+        double    h = ((double)rand() / (RAND_MAX));                // Get a random number for the probability of progression vs recovery
+        
+        // --- In case they recover from HPV
             if (h>CIN1_Rates[0]){
-                //MyPointerToPerson->CIN1_DateofProgression=no_hpv_infection;
-                MyPointerToPerson->HPV_DateofRecovery=TestCIN1Date;
-                MyPointerToPerson->HPV_StatusAtRecovery=1; // Clean later; 1 = recovered from HPV
+                MyPointerToPerson->HPV_DateofRecovery=TestDate;
+                MyPointerToPerson->HPV_StatusAtRecovery=1;      // Clean later; 1 = recovered from CIN1
                 
-                //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "Date of recovery: " << TestCIN1Date << endl << "H: " << h <<  endl << endl;
+                
                 // --- Let's push recovery into the events Q
                 event * HPV_DateofRecoveryEvent = new event;
                 Events.push_back(HPV_DateofRecoveryEvent);
                 HPV_DateofRecoveryEvent->time = MyPointerToPerson->HPV_DateofRecovery;
                 HPV_DateofRecoveryEvent->p_fun = &EventMyHPVRecovery;
                 HPV_DateofRecoveryEvent->person_ID = MyPointerToPerson;
-                p_PQ->push(HPV_DateofRecoveryEvent);}
+                p_PQ->push(HPV_DateofRecoveryEvent);
+            }
             
             // --- In case they progress to CIN1
             if (h<=CIN1_Rates[0]){
-                //if (TestCIN1Date>=MyPointerToPerson->DateOfDeath) {MyPointerToPerson->CIN1_DateofProgression=hpv_date_after_death;}         // She'll die before progressing
-                //if (TestCIN1Date<MyPointerToPerson->DateOfDeath){
-                MyPointerToPerson->CIN1_DateofProgression=TestCIN1Date;//}{MyPointerToPerson->HPV_DateofRecovery=-977;  // She'll progress to CIN 1
-                //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "Date of progression: " << TestCIN1Date << endl << "H: " << h <<  endl << endl;
-                // --- Let's push progression into the events Q
+                MyPointerToPerson->CIN1_DateofProgression=TestDate;
+
                 event * CIN1_DateofProgressionEvent = new event;
                 Events.push_back(CIN1_DateofProgressionEvent);
                 CIN1_DateofProgressionEvent->time = MyPointerToPerson->CIN1_DateofProgression;
                 CIN1_DateofProgressionEvent->p_fun = &EventMyCIN1Status;
                 CIN1_DateofProgressionEvent->person_ID = MyPointerToPerson;
-                p_PQ->push(CIN1_DateofProgressionEvent);}}}
+                p_PQ->push(CIN1_DateofProgressionEvent);
+            }
+    }
+    
     E(cout << "Somebody with HPV just progressed to CIN1 or recovered!" << endl;)
 }
 
@@ -470,53 +466,40 @@ void EventMyCIN1Status(person *MyPointerToPerson){
     
     E(cout << "Somebody with CIN1 is about to progress to CIN2/3 or recover: " << endl;)
     
-    if(MyPointerToPerson->Alive == 1 && MyPointerToPerson->HPV_Status==HPV_Status_HPV){
-        MyPointerToPerson->HPV_Status=HPV_Status_CIN1;
-        cout << "Date of CIN progression: " << MyPointerToPerson->CIN1_DateofProgression << endl;
-        ///Decide if person recovers or moves on to CIN2/3
-        if (MyPointerToPerson->CIN1_DateofProgression>0){
-        int year = floor(*p_GT);
-        double months = floor(((1-(*p_GT-year+0.01))*12));
-            
-        int j=0;
-        float TestCIN2_3Date=0;
+    if(MyPointerToPerson->Alive == 1 && MyPointerToPerson->HPV_Status == HPV_Status_HPV){
+        
+        MyPointerToPerson->HPV_Status = HPV_Status_CIN1;        // Update status
+        
+        int j=0;                                                // Find out time of progression/recovery
+        double TestDate=0;
         random_device rd;
         mt19937 gen{rd()};
         uniform_int_distribution<> dis{1, 2};
         j = dis(gen);
             
-            double YearFraction=-999;
-            YearFraction=(RandomMinMax_2(0,months))/12.1;
-            double    h = ((double)rand() / (RAND_MAX));
-            TestCIN2_3Date=(MyPointerToPerson->CIN1_DateofProgression+j)+YearFraction;
-            
-            //// In case they recover from CIN1
+        double YearFraction=-999;                               // Get the date when the progression/recovery will take place
+        YearFraction=(RandomMinMax_2(0,12))/12.1;
+        TestDate=MyPointerToPerson->CIN1_DateofProgression+j+YearFraction;
+        
+        double    h = ((double)rand() / (RAND_MAX));
+        
+            // --- In case they recover from CIN1
             if (h>CIN2_3_Rates[0]){
-                MyPointerToPerson->CIN2_3_DateofProgression=no_hpv_infection;
-                MyPointerToPerson->HPV_DateofRecovery=TestCIN2_3Date;
+                MyPointerToPerson->HPV_DateofRecovery=TestDate;
                 MyPointerToPerson->HPV_StatusAtRecovery=2;      // Clean later; 2 = recovered from CIN1
                 
-                //// Let's push recovery into the events Q
                 event * CIN1_DateofRecoveryEvent = new event;
                 Events.push_back(CIN1_DateofRecoveryEvent);
                 CIN1_DateofRecoveryEvent->time = MyPointerToPerson->HPV_DateofRecovery;
                 CIN1_DateofRecoveryEvent->p_fun = &EventMyHPVRecovery;
                 CIN1_DateofRecoveryEvent->person_ID = MyPointerToPerson;
                 p_PQ->push(CIN1_DateofRecoveryEvent);
-                
-                //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "Sex: " << MyPointerToPerson-> Sex << endl << "Date of birth: " << MyPointerToPerson->DoB << endl << "Date of death: " << MyPointerToPerson->DateOfDeath << endl << "HPV status: " << MyPointerToPerson->HPV_Status << endl << "Date of HPV infection: " << MyPointerToPerson->HPV_DateofInfection << endl << "Date of CIN 1: " << MyPointerToPerson->CIN1_DateofProgression << endl << "Date of CIN1 recovery: " << MyPointerToPerson->CIN1_DateofRecovery << endl << "HIV: " << MyPointerToPerson->HIV << endl << endl;
-                
             }
 
-            //// In case they progress to CIN2/3
+            // --- In case they progress to CIN2/3
             if (h<=CIN2_3_Rates[0]){
+                MyPointerToPerson->CIN2_3_DateofProgression=TestDate;
                 
-                //cout << CIN2_3_Rates[0] << endl;
-                
-                if (TestCIN2_3Date>=MyPointerToPerson->DateOfDeath) {MyPointerToPerson->CIN2_3_DateofProgression=hpv_date_after_death;}
-                if (TestCIN2_3Date<MyPointerToPerson->DateOfDeath){MyPointerToPerson->CIN2_3_DateofProgression=TestCIN2_3Date;}{MyPointerToPerson->HPV_DateofRecovery=-977;
-                
-                //// Let's push progression into the events Q
                 event * CIN2_3_DateofProgressionEvent = new event;
                 Events.push_back(CIN2_3_DateofProgressionEvent);
                 CIN2_3_DateofProgressionEvent->time = MyPointerToPerson->CIN2_3_DateofProgression;
@@ -524,11 +507,10 @@ void EventMyCIN1Status(person *MyPointerToPerson){
                 CIN2_3_DateofProgressionEvent->person_ID = MyPointerToPerson;
                 p_PQ->push(CIN2_3_DateofProgressionEvent);
                 
-                //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "Prob: " << h << endl << "Date of birth: " << MyPointerToPerson->DoB << endl << "Date of death: " << MyPointerToPerson->DateOfDeath << endl << "HPV status: " << MyPointerToPerson->HPV_Status << endl << "Date of HPV infection: " << MyPointerToPerson->HPV_DateofInfection << endl << "Date of progression to CIN 1: " << MyPointerToPerson->CIN1_DateofProgression << endl << "Date of progression to CIN 2/3: " << MyPointerToPerson->CIN2_3_DateofProgression << endl << "HIV: " << MyPointerToPerson->HIV << endl << endl;
-                }
             }
-        }
+
     }
+    
     E(cout << "Somebody with CIN1 just progressed to CIN2/3 or recovered!" << endl;)
 }
 
@@ -537,65 +519,50 @@ void EventMyCIN2_3Status(person *MyPointerToPerson){
     E(cout << "Somebody with CIN2_3 is about to progress to CIS or recover: " << endl;)
     
     if(MyPointerToPerson->Alive == 1 && MyPointerToPerson->HPV_Status==HPV_Status_CIN1){
-        MyPointerToPerson->Age= (*p_GT - MyPointerToPerson->DoB);
+        
         MyPointerToPerson->HPV_Status=HPV_Status_CIN2_3;
         
-        //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "Sex: " << MyPointerToPerson-> Sex << endl << "Date of birth: " << MyPointerToPerson->DoB << endl << "Date of death: " << MyPointerToPerson->DateOfDeath << endl << "HPV status: " << MyPointerToPerson->HPV_Status << endl << "Date of HPV infection: " << MyPointerToPerson->HPV_DateofInfection << endl << "Date of CIN 1: " << MyPointerToPerson->CIN1_DateofProgression << endl << "Date of CIN1 recovery: " << MyPointerToPerson->CIN1_DateofRecovery << endl << "Date of CIN 2/3: " << MyPointerToPerson->CIN2_3_DateofProgression << endl << "Date of CIN2/3 recovery: " << MyPointerToPerson->CIN2_3_DateofRecovery << endl << "HIV: " << MyPointerToPerson->HIV << endl << endl;
+        int j=0;                                                // Find out time of progression/recovery
+        double TestDate=0;
+        random_device rd;
+        mt19937 gen{rd()};
+        uniform_int_distribution<> dis{1, 2};
+        j = dis(gen);
+            
+        double YearFraction=-999;                               // Get the date when the progression/recovery will take place
+        YearFraction=(RandomMinMax_2(0,12))/12.1;
+        TestDate=MyPointerToPerson->CIN2_3_DateofProgression+j+YearFraction;
         
-        ///Decide if person recovers or moves on to CIS
-        if (MyPointerToPerson->CIN2_3_DateofProgression>0){
-            int year = floor(*p_GT);
-            double months = floor(((1-(*p_GT-year+0.01))*12));
-            
-            int j=0;
-            float TestCISDate=0;
-            std::random_device rd;
-            std::mt19937 gen{rd()};
-            std::uniform_int_distribution<> dis{1, 2};
-            j = dis(gen);
-            
-            double YearFraction=-999;
-            //if(months>=1){}
-            YearFraction=(RandomMinMax_2(0,months))/12.1;
-            //if(months<1){YearFraction=0;}
-            double    h = ((double)rand() / (RAND_MAX));
-            TestCISDate=(MyPointerToPerson->CIN2_3_DateofProgression+j)+YearFraction;
-            
-            //// In case they recover from CIN2/3
-            if (h>CIS_Rates[0]){
-                MyPointerToPerson->CIS_DateofProgression=no_hpv_infection;
-                MyPointerToPerson->HPV_DateofRecovery=TestCISDate;
-                MyPointerToPerson->HPV_StatusAtRecovery=3;      // Clean later; 3 = recovered from CIN2/3
+        double    h = ((double)rand() / (RAND_MAX));
+        
+        // --- In case they recover from CIN2/3
+        if (h>CIS_Rates[0]){
+            MyPointerToPerson->HPV_DateofRecovery=TestDate;
+            MyPointerToPerson->HPV_StatusAtRecovery=3;      // Clean later; 3 = recovered from CIN2/3
                 
-                //// Let's push recovery into the events Q
-                event * CIN2_3_DateofRecoveryEvent = new event;
-                Events.push_back(CIN2_3_DateofRecoveryEvent);
-                CIN2_3_DateofRecoveryEvent->time = MyPointerToPerson->HPV_DateofRecovery;
-                CIN2_3_DateofRecoveryEvent->p_fun = &EventMyHPVRecovery;
-                CIN2_3_DateofRecoveryEvent->person_ID = MyPointerToPerson;
-                p_PQ->push(CIN2_3_DateofRecoveryEvent);
-            }
+            event * CIN2_3_DateofRecoveryEvent = new event;
+            Events.push_back(CIN2_3_DateofRecoveryEvent);
+            CIN2_3_DateofRecoveryEvent->time = MyPointerToPerson->HPV_DateofRecovery;
+            CIN2_3_DateofRecoveryEvent->p_fun = &EventMyHPVRecovery;
+            CIN2_3_DateofRecoveryEvent->person_ID = MyPointerToPerson;
+            p_PQ->push(CIN2_3_DateofRecoveryEvent);
+        }
             
-            //// In case they progress to CIS
-            if (h<=CIS_Rates[0]){
+        // --- In case they progress to CIS
+        if (h<=CIS_Rates[0]){
                 
-                //cout << CIS_Rates[0] << endl;
-                if (TestCISDate>=MyPointerToPerson->DateOfDeath) {MyPointerToPerson->CIS_DateofProgression=hpv_date_after_death;}
-                if (TestCISDate<MyPointerToPerson->DateOfDeath){MyPointerToPerson->CIS_DateofProgression=TestCISDate;}{MyPointerToPerson->HPV_DateofRecovery=-977;
+            MyPointerToPerson->CIS_DateofProgression=TestDate;
                 
-                //// Let's push progression into the events Q
-                event * CIS_DateofProgressionEvent = new event;
-                Events.push_back(CIS_DateofProgressionEvent);
-                CIS_DateofProgressionEvent->time = MyPointerToPerson->CIS_DateofProgression;
-                CIS_DateofProgressionEvent->p_fun = &EventMyCISStatus;
-                CIS_DateofProgressionEvent->person_ID = MyPointerToPerson;
-                p_PQ->push(CIS_DateofProgressionEvent);
+            event * CIS_DateofProgressionEvent = new event;
+            Events.push_back(CIS_DateofProgressionEvent);
+            CIS_DateofProgressionEvent->time = MyPointerToPerson->CIS_DateofProgression;
+            CIS_DateofProgressionEvent->p_fun = &EventMyCISStatus;
+            CIS_DateofProgressionEvent->person_ID = MyPointerToPerson;
+            p_PQ->push(CIS_DateofProgressionEvent);
                 
-                    //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "Prob: " << h << endl << "Date of birth: " << MyPointerToPerson->DoB << endl << "Date of death: " << MyPointerToPerson->DateOfDeath << endl << "HPV status: " << MyPointerToPerson->HPV_Status << endl << "Date of HPV infection: " << MyPointerToPerson->HPV_DateofInfection << endl << "Date of progression to CIN 1: " << MyPointerToPerson->CIN1_DateofProgression << endl << "Date of progression to CIN 2/3: " << MyPointerToPerson->CIN2_3_DateofProgression << endl << "Date of progression to CIS: " << MyPointerToPerson->CIS_DateofProgression << endl << "HIV: " << MyPointerToPerson->HIV << endl << endl;
-                }
-            }
         }
     }
+    
     E(cout << "Somebody with CIN2_3 just progressed to CIS or recovered!" << endl;)
 }
 
@@ -604,87 +571,77 @@ void EventMyCISStatus(person *MyPointerToPerson){
     E(cout << "Somebody with CIS is about to progress to ICC or recover(?): " << endl;)
     
     if(MyPointerToPerson->Alive == 1 && MyPointerToPerson->HPV_Status==HPV_Status_CIN2_3){
-        MyPointerToPerson->Age= (*p_GT - MyPointerToPerson->DoB);
         MyPointerToPerson->HPV_Status=HPV_Status_CIS;
         
-        ///Decide if person recovers or moves on to ICC
-        if (MyPointerToPerson->CIS_DateofProgression>0){
-            int year = floor(*p_GT);
-            double months = floor(((1-(*p_GT-year+0.01))*12));
+        int j=0;                                        // Find out time of progression/recovery
+        double TestDate=0;
+        random_device rd;
+        mt19937 gen{rd()};
+        uniform_int_distribution<> dis{1, 2};
+        j = dis(gen);
             
-            int j=0;
-            float TestICCDate=0;
-            std::random_device rd;
-            std::mt19937 gen{rd()};
-            std::uniform_int_distribution<> dis{1, 2};
-            j = dis(gen);
+        double YearFraction=-999;                       // Get the date when the progression/recovery will take place
+        YearFraction=(RandomMinMax_2(0,12))/12.1;
+        TestDate=MyPointerToPerson->CIS_DateofProgression+j+YearFraction;
+        
+        double    h = ((double)rand() / (RAND_MAX));
+        
             
-            double YearFraction=-999;
-            //if(months>=1){};
-            YearFraction=(RandomMinMax_2(0,months))/12.1;
-            //if(months<1){YearFraction=0;}
-            double    h = ((double)rand() / (RAND_MAX));
-            TestICCDate=(MyPointerToPerson->CIS_DateofProgression+j)+YearFraction;
+        // --- In case they recover from CIS there's a bug! Check with cout below
+        if (h>ICC_Rates[0]){
+            MyPointerToPerson->HPV_DateofRecovery=TestDate;
+            MyPointerToPerson->HPV_StatusAtRecovery=4;  // Clean later; 4 = recovered from CIS
+                
+            event * CIS_DateofRecoveryEvent = new event;
+            Events.push_back(CIS_DateofRecoveryEvent);
+            CIS_DateofRecoveryEvent->time = MyPointerToPerson->HPV_DateofRecovery;
+            CIS_DateofRecoveryEvent->p_fun = &EventMyHPVRecovery;
+            CIS_DateofRecoveryEvent->person_ID = MyPointerToPerson;
+            p_PQ->push(CIS_DateofRecoveryEvent);
+                
+            cout << "There's a bug; nobody should recover from CIS" << endl;
+                
+        }
             
-            //// In case they recover from CIS there's a bug! Check with cout below
-            if (h>ICC_Rates[0]){
-                MyPointerToPerson->ICC_DateofProgression=no_hpv_infection;
-                MyPointerToPerson->HPV_DateofRecovery=TestICCDate;
-                MyPointerToPerson->HPV_StatusAtRecovery=4;  // Clean later; 4 = recovered from CIS
+        // --- Get date of progression to ICC
+        if (h<=ICC_Rates[0]){
+            MyPointerToPerson->ICC_DateofProgression=TestDate;
                 
-                //// Feed recovery into events Q
-                event * CIS_DateofRecoveryEvent = new event;
-                Events.push_back(CIS_DateofRecoveryEvent);
-                CIS_DateofRecoveryEvent->time = MyPointerToPerson->HPV_DateofRecovery;
-                CIS_DateofRecoveryEvent->p_fun = &EventMyHPVRecovery;
-                CIS_DateofRecoveryEvent->person_ID = MyPointerToPerson;
-                p_PQ->push(CIS_DateofRecoveryEvent);
-                
-                cout << "There's a bug; nobody should recover from CIS" << endl;
-                
-            }
-            
-            //// Get date of progression to ICC
-            if (h<=ICC_Rates[0]){
-                
-                //cout << ICC_Rates[0] << endl;
-                if (TestICCDate>=MyPointerToPerson->DateOfDeath){MyPointerToPerson->ICC_DateofProgression=hpv_date_after_death;}
-                if (TestICCDate<MyPointerToPerson->DateOfDeath){MyPointerToPerson->ICC_DateofProgression=TestICCDate;}{MyPointerToPerson->HPV_DateofRecovery=-977;
-                
-                //// Feed progression into events Q
-                event * ICC_DateofProgressionEvent = new event;
-                Events.push_back(ICC_DateofProgressionEvent);
-                ICC_DateofProgressionEvent->time = MyPointerToPerson->ICC_DateofProgression;
-                ICC_DateofProgressionEvent->p_fun = &EventMyICCStatus;
-                ICC_DateofProgressionEvent->person_ID = MyPointerToPerson;
-                p_PQ->push(ICC_DateofProgressionEvent);
-                    //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "Prob: " << h << endl << "Date of birth: " << MyPointerToPerson->DoB << endl << "Date of death: " << MyPointerToPerson->DateOfDeath << endl << "HPV status: " << MyPointerToPerson->HPV_Status << endl << "Date of HPV infection: " << MyPointerToPerson->HPV_DateofInfection << endl << "Date of progression to CIN 1: " << MyPointerToPerson->CIN1_DateofProgression << endl << "Date of progression to CIN 2/3: " << MyPointerToPerson->CIN2_3_DateofProgression << endl << "Date of progression to CIS: " << MyPointerToPerson->CIS_DateofProgression << endl << "Date of progression to ICC: " << MyPointerToPerson->ICC_DateofProgression << endl << "HIV: " << MyPointerToPerson->HIV << endl << endl;
-                }
-            }
+            event * ICC_DateofProgressionEvent = new event;
+            Events.push_back(ICC_DateofProgressionEvent);
+            ICC_DateofProgressionEvent->time = MyPointerToPerson->ICC_DateofProgression;
+            ICC_DateofProgressionEvent->p_fun = &EventMyICCStatus;
+            ICC_DateofProgressionEvent->person_ID = MyPointerToPerson;
+            p_PQ->push(ICC_DateofProgressionEvent);
         }
     }
+    
     E(cout << "Somebody with CIS just progressed to ICC!" << endl;)
 }
 
 
 void EventMyICCStatus(person *MyPointerToPerson){
+    
     E(cout << "Somebody with ICC is about to get its HPV status updated: " << endl;)
-    if(MyPointerToPerson->Alive == 1 && MyPointerToPerson->HPV_Status==HPV_Status_CIS){MyPointerToPerson->HPV_Status=HPV_Status_ICC;
-        //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "Date of birth: " << MyPointerToPerson->DoB << endl << "Date of death: " << MyPointerToPerson->DateOfDeath << endl << "HPV status: " << MyPointerToPerson->HPV_Status << endl << "Date of HPV infection: " << MyPointerToPerson->HPV_DateofInfection << endl << "Date of progression to CIN 1: " << MyPointerToPerson->CIN1_DateofProgression << endl << "Date of progression to CIN 2/3: " << MyPointerToPerson->CIN2_3_DateofProgression << endl << "Date of progression to CIS: " << MyPointerToPerson->CIS_DateofProgression << endl << "Date of progression to ICC: " << MyPointerToPerson->ICC_DateofProgression << endl << "Years lived with curable HPV disease: " << (*p_GT - MyPointerToPerson->HPV_DateofInfection) << endl << "HIV: " << MyPointerToPerson->HIV << endl << endl;
+    
+    if(MyPointerToPerson->Alive == 1 && MyPointerToPerson->HPV_Status == HPV_Status_CIS){
+        
+        MyPointerToPerson->HPV_Status=HPV_Status_ICC;
     }
+    
     E(cout << "Somebody with ICC just got its status updated!" << endl;)
 }
 
 
 void EventMyHPVRecovery(person *MyPointerToPerson){
+    
     E(cout << "Somebody is about to recover from a stage of HPV infection: " << endl;)
+    
     if(MyPointerToPerson->Alive == 1 && MyPointerToPerson->HPV_Status<HPV_Status_Recovered){
-        if (MyPointerToPerson->HPV_DateofRecovery>0){MyPointerToPerson->HPV_Status=HPV_Status_Recovered;}
-        //if (MyPointerToPerson->CIN1_DateofRecovery>0){MyPointerToPerson->HPV_Status=HPV_Status_Recovered;}
-        //if (MyPointerToPerson->CIN2_3_DateofRecovery>0){MyPointerToPerson->HPV_Status=HPV_Status_Recovered;}
-        //if (MyPointerToPerson->CIS_DateofRecovery>0){MyPointerToPerson->HPV_Status=HPV_Status_Recovered;}
-        
-    }
+    
+        MyPointerToPerson->HPV_Status=HPV_Status_Recovered;
+
+}
     
     /*// --- Let's see if this woman will re-infect with HPV later in life --- //
     E(cout << endl << endl << "We're assigning HPV re-infection" << endl);
@@ -887,8 +844,8 @@ void EventMyHIVInfection(person *MyPointerToPerson){
                         if (ncd_nr==0)
                         {
                             MyPointerToPerson->HT=DateNCD;
-                            //// --- Lets feed Hypertension into the eventQ --- ////
                             int p=MyPointerToPerson->PersonID-1;
+                            
                             event * HTEvent = new event;
                             Events.push_back(HTEvent);
                             HTEvent->time = MyPointerToPerson->HT;
@@ -901,8 +858,8 @@ void EventMyHIVInfection(person *MyPointerToPerson){
                         else if (ncd_nr==1)
                         {
                             MyPointerToPerson->CKD=DateNCD;
-                            //// --- Lets feed MI into the eventQ --- ////
                             int p=MyPointerToPerson->PersonID-1;
+                            
                             event * CKDEvent = new event;
                             Events.push_back(CKDEvent);
                             CKDEvent->time = MyPointerToPerson->CKD;
@@ -919,9 +876,10 @@ void EventMyHIVInfection(person *MyPointerToPerson){
                 }
             }
         }
+        
         E(cout << "We finished assigning NCDs for HIV+!" << endl;)
         
-        // Now we need to re-evaluate the risk of HPV infection for women with HIV
+        // --- Now we need to re-evaluate the risk of HPV infection for women with HIV
         
         E(cout << endl << endl << "We're re-evaluating the probability of HPV for HIV+ women upon infection!" << endl);
         
@@ -930,34 +888,27 @@ void EventMyHIVInfection(person *MyPointerToPerson){
             double h = *p_GT-MyPointerToPerson->DoB;
             int f = floor(h);
             double ReTestHPVDate=0;
-            int r = RandomMinMax_2(f, 100);
-            if(r<=65){double g = HPVarray[1][r];
-                //cout << f << " vs " << r << " vs " << g << endl;
+            double r = RandomMinMax_2(f, 100)/100;
             
-            if (g<=HPVarray[1][65])                     // They will get HPV infection!
-            {
+            if (r<=HPVarray[1][65]*HPV_hiv_Array_buffer){                     // They will get HPV infection!
+        
                 int i=0;
-                while (g>HPVarray[1][i]){i++;}
+                while (r>HPVarray[1][i]*HPV_hiv_Array_buffer){i++;}
                 double YearFraction=(RandomMinMax_2(1,12))/ 12.1;
                 ReTestHPVDate=MyPointerToPerson->DoB+i+YearFraction;
-                
-                //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "HIV: " << MyPointerToPerson->HIV << endl << "Age now: " << *p_GT-MyPointerToPerson->DoB << endl << "HPV: " << MyPointerToPerson->HPV_DateofInfection << endl << "Age at HPV: " << MyPointerToPerson->HPV_DateofInfection-MyPointerToPerson->DoB << endl << "Age drawn: " << ReTestHPVDate-MyPointerToPerson->DoB << endl  << "Re-test date: " << ReTestHPVDate << endl << endl;
                 
                 if (ReTestHPVDate>=*p_GT && (ReTestHPVDate<MyPointerToPerson->HPV_DateofInfection || MyPointerToPerson->HPV_DateofInfection==-999 || MyPointerToPerson->HPV_DateofInfection==-988))
                 {
                     MyPointerToPerson->HPV_DateofInfection=ReTestHPVDate;    // The newly assigned date of infection replaces the old one
-                    
-                    //cout << "Person ID: " << MyPointerToPerson->PersonID << endl << "HIV: " << MyPointerToPerson->HIV << endl << "Age now: " << *p_GT-MyPointerToPerson->DoB << endl << "HPV: " << MyPointerToPerson->HPV_DateofInfection << endl << "Age at HPV: " << MyPointerToPerson->HPV_DateofInfection-MyPointerToPerson->DoB << endl << "Re-test date: " << ReTestHPVDate << endl << endl;
-                    
-                    // She's now booked for HPV-related morbidity
                     int p=MyPointerToPerson->PersonID-1;
+                    
                     event * HPV_DateofInfectionEvent = new event;
                     Events.push_back(HPV_DateofInfectionEvent);
                     HPV_DateofInfectionEvent->time = MyPointerToPerson->HPV_DateofInfection;
                     HPV_DateofInfectionEvent->p_fun = &EventMyHPVInfection;
                     HPV_DateofInfectionEvent->person_ID = MyArrayOfPointersToPeople[p];
                     p_PQ->push(HPV_DateofInfectionEvent);
-                }}
+                }
             }
         }
     }
@@ -1339,7 +1290,6 @@ void EventCD4change(person *MyPointerToPerson){
             double death_test = 0;
             double dd = ((double)rand() / (RAND_MAX));
             death_test = (-1/FindDeath_CD4_rate) * log(dd);
-            //cout <<  death_test << endl;
             
             double death_test_date = *p_GT +death_test;                      // Get the actual date, not just time until death
             

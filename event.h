@@ -28,9 +28,7 @@ public:
 														// This means that there is a pointer called 'person_ID' which is pointing to class 'person'
 	};													// [...] allows to make sure all events, including new ones, point to the correct person to whom this event is occurring.  
 	
-#endif													
-
-
+#endif	
 
 
 

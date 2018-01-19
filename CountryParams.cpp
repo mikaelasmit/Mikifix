@@ -208,7 +208,7 @@ else if (x == 4){                                          // Uasin Gishu - KENY
 void getParamsString(int x){
     if (x == 1){
 
-        ParamDirectory="/Users/Monkeyface/Dropbox/Ageing in Kenya and Zimbabwe - project/Model_wHPV/Model_Africa_HPV/HIVModelZimbabwe/Kenya/";
+        ParamDirectory="/Users/mc1405/Dropbox/All Work/Ageing in Kenya and Zimbabwe - project/Mikifix/HIVModelZimbabwe/Kenya/";
     }
 
     else if (x == 2){

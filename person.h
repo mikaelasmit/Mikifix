@@ -50,9 +50,9 @@ public:
     double  CIS_DateofProgression;
     double  ICC_DateofProgression;
     double  HPV_DateofRecovery;
-    double  CIN1_DateofRecovery;
-    double  CIN2_3_DateofRecovery;
-    double  CIS_DateofRecovery;
+    //double  CIN1_DateofRecovery;
+    //double  CIN2_3_DateofRecovery;
+    //double  CIS_DateofRecovery;
     
     // --- HPV Re-Infection ---
     int     HPV_ReInfection_Count;

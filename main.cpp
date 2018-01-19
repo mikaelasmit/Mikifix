@@ -35,7 +35,7 @@ using namespace std;
 int country=1;
 
 // STEP 2 --- NAME THE DIRECTORY AND TAG FOR THE OUTPUT FILE
-string OutputFileDirectory="/Users/Monkeyface/Dropbox/Ageing in Kenya and Zimbabwe - project/Model_wHPV/MATLAB_Pablo copy/MATLAB copy/HPVcheck3.csv";
+string OutputFileDirectory="/Users/mc1405/Desktop/HPVcheck3.csv";
 
 
 /// STEP 3 --- AT WHAT FACTOR SHOULD WE RUN THE POPULATION?
@@ -271,7 +271,9 @@ int main(){
     
     
     for (int i=0; i<total_population; i++) {								// Note: If adding more variables to be output, need to adapt the %x
-        fprintf(ProjectZim,"%d, %d, %f, %f, %d, %d, %f, %d, %f, %d, %d, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d \n",
+        //fprintf(ProjectZim,"%d, %d, %f, %f, %d, %d, %f, %d, %f, %d, %d, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d \n",
+        fprintf(ProjectZim,"%d, %d, %f, %f, %d, %d, %f, %d, %f, %d, %d, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d \n",
+                
                 MyArrayOfPointersToPeople[i]->PersonID,
                 MyArrayOfPointersToPeople[i]->Sex,
                 MyArrayOfPointersToPeople[i]->DoB,
@@ -313,9 +315,9 @@ int main(){
                 MyArrayOfPointersToPeople[i]->CIS_DateofProgression,
                 MyArrayOfPointersToPeople[i]->ICC_DateofProgression,              // Number 40
                 MyArrayOfPointersToPeople[i]->HPV_DateofRecovery,
-                MyArrayOfPointersToPeople[i]->CIN1_DateofRecovery,
-                MyArrayOfPointersToPeople[i]->CIN2_3_DateofRecovery,
-                MyArrayOfPointersToPeople[i]->CIS_DateofRecovery,
+                //MyArrayOfPointersToPeople[i]->CIN1_DateofRecovery,
+                //MyArrayOfPointersToPeople[i]->CIN2_3_DateofRecovery,
+                //MyArrayOfPointersToPeople[i]->CIS_DateofRecovery,
                 MyArrayOfPointersToPeople[i]->MI,                               // Number 45
                 MyArrayOfPointersToPeople[i]->HC,
                 MyArrayOfPointersToPeople[i]->HPV_ReInfection_Count
